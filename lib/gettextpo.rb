@@ -15,19 +15,16 @@ class GettextPo
     def initialize(lines)
       s = StringScanner.new lines
       @source = lines
-      @translator_comment = []        # translator-comments
-      @extracted_comment = []       # extracted-comments
-      @reference = []               # reference
-      @flag = []
-      @prev_msgid = []
-      @msgid = []
-      @msgstr = []
+      @translator_comment = ""      # translator-comments
+      @extracted_comment = ""       # extracted-comments
+      @reference = ""               # reference
+      @flag = ""                    # flag
+      @prev_msgid = [""]            # previous-untranslated-string
+      @msgid = [""]                 # untranslated-string
+      @msgstr = [""]                # translated-string
       @header_flag = false
       while !s.eos?
-        if s.scan(/^# ?(.*\n)/)
-          # translator-comments
-          @translator_comment << s[1]
-        elsif s.scan(/^#\. ?(.*\n)/)
+        if s.scan(/^#\. ?(.*\n)/)
           # extracted-comments
           @extracted_comment << s[1]
         elsif s.scan(/^#\: ?(.*\n)/)
@@ -35,7 +32,7 @@ class GettextPo
           @reference << s[1]
         elsif s.scan(/^#\, ?(.*\n)/)
           # flag
-          p s[1]
+          @flag << s[1]
         elsif s.scan(/^#\| msgid \"(.*)\"\n/)
           # previous-untranslated-string
           @prev_msgid[0] = ""  unless @prev_msgid[0]
@@ -65,6 +62,9 @@ class GettextPo
           while !s.scan(/^\"(.*)\"\n/).nil?
             @msgstr[i] << unescape(s[1])
           end
+        elsif s.scan(/^# ?(.*\n)/)
+          # translator-comments
+          @translator_comment << s[1]
         elsif s.scan(/\s*\n/)
           nil
         else
@@ -82,15 +82,54 @@ class GettextPo
       @msgid
     end
 
+    def prev_msgid
+      @prev_msgid
+    end
+
     def msgstr
       @msgstr
+    end
+
+    def translator_comment
+      @translator_comment
+    end
+
+    def extracted_comment
+      @extracted_comment
+    end
+
+    def reference
+      @reference
+    end
+
+    def flag
+      @flag
+    end
+
+    def source
+      @source
     end
 
     def unescape(str)
       str.gsub(/\\n/, "\n")
     end
-
+    private :unescape
   end
+
+  class Header < Entry
+    def initialize(entry)
+      @source = entry.source
+      @translator_comment = entry.translator_comment
+      @extracted_comment = entry.extracted_comment
+      @reference = entry.reference
+      @flag = entry.flag
+      @prev_msgid = entry.prev_msgid
+      @msgid = entry.msgid
+      @msgstr = entry.msgstr
+      @header_flag = true
+    end
+  end
+
 
   def initialize(src, opt={})
     @src = src.is_a?(String) ? StringIO.new(src) : src
@@ -119,7 +158,7 @@ class GettextPo
       if line =~ /\A\s*\z/
         e = Entry.new(buf)
         if @header.nil? and e.header?
-          @header = e
+          @header = Header.new(e)
         else
           @entries << e
         end
@@ -129,7 +168,7 @@ class GettextPo
     unless buf.empty?
       e = Entry.new(buf)
       if @header.nil? and e.header?
-        @header = e
+        @header = Header.new(e)
       else
         @entries << e
       end
