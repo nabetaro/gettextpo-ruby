@@ -5,47 +5,72 @@
 # This Class describe GNU Gettext PO format file. see also:
 #  http://www.gnu.org/software/gettext/manual/gettext.html#PO-Files
 
+require 'strscan'
+
+
 class GettextPo
+  class InvalidEntry < StandardError; end
 
   class Entry
     def initialize(lines)
-
+      s = StringScanner.new lines
+      @source = lines
       @translator_comment = []        # translator-comments
       @extracted_comment = []       # extracted-comments
       @reference = []               # reference
       @flag = []
-      @prev_msgid = ""
-      @msgid = ""
-      @msgstr = ""
+      @prev_msgid = []
+      @msgid = []
+      @msgstr = []
       @header_flag = false
-      lines.each do |l|
-#        p l
-        if l =~ /\A\# (.*)\z/
+      while !s.eos?
+        if s.scan(/^# ?(.*\n)/)
           # translator-comments
-          @translator_comment << $1
-        elsif l =~ /\A#\. (.*)\Z/
+          @translator_comment << s[1]
+        elsif s.scan(/^#\. ?(.*\n)/)
           # extracted-comments
-          @extracted_comment << $1
-        elsif l =~ /\A#\: (.*)\Z/
+          @extracted_comment << s[1]
+        elsif s.scan(/^#\: ?(.*\n)/)
           # reference
-        elsif l =~ /\A#\, (.*)\Z/
+          @reference << s[1]
+        elsif s.scan(/^#\, ?(.*\n)/)
           # flag
-        elsif l =~ /\A#\| msgid \"(.*)\"\Z/
+          p s[1]
+        elsif s.scan(/^#\| msgid \"(.*)\"\n/)
           # previous-untranslated-string
-          @prev_msgid << $1
-          @prev_msgid << "\n" if $2
-        elsif l =~ /\Amsgid \"(.*)\"\Z/
+          @prev_msgid[0] = ""  unless @prev_msgid[0]
+          @prev_msgid[0] << unescape(s[1])
+          while s.scan(/^#\| \"(.*)\"\n/)
+            @prev_msgid[0] << unescape(s[1])
+          end
+        elsif s.scan(/^msgid \"(.*)\"\n/)
           # untranslated-string
-p $1
-          @msgid << $1
-          p @msgid
-        elsif l =~ /\Amsgstr \"(.*)\"\Z/
-          @msgstr << $1
+          @msgid[0] = ""  unless @msgid[0]
+          @msgid[0] << unescape(s[1])
+          while !s.scan(/^\"(.*)\"\n/).nil?
+            @msgid[0] << unescape(s[1])
+          end
+        elsif s.scan(/^msgid_plural \"(.*)\"\n/)
+          # untranslated-string
+          @msgid[1] = ""  unless @msgid[1]
+          @msgid[1] << unescape(s[1])
+          while !s.scan(/^\"(.*)\"\n/).nil?
+            @msgid[1] << unescape(s[1])
+          end
+        elsif s.scan(/^msgstr(\[(\d+)\])* \"(.*)\"\n/)
           # translated-string
-        elsif l =~ /\A\"(.*)\"\Z/
-          
+          i = s[2] ? s[2].to_i : 0
+          @msgstr[i] = ""  unless @msgstr[i]
+          @msgstr[i] << unescape(s[3])
+          while !s.scan(/^\"(.*)\"\n/).nil?
+            @msgstr[i] << unescape(s[1])
+          end
+        elsif s.scan(/\s*\n/)
+          nil
+        else
+          raise InvalidEntry, "REST: #{s.rest}"
         end
-        @header_flag = true if @msgid.empty?
+        @header_flag = true if @msgid[0].empty?
       end
     end
 
@@ -60,6 +85,11 @@ p $1
     def msgstr
       @msgstr
     end
+
+    def unescape(str)
+      str.gsub(/\\n/, "\n")
+    end
+
   end
 
   def initialize(src, opt={})
@@ -77,9 +107,13 @@ p $1
     @entries
   end
 
+  def header
+    @header
+  end
+
 
   def parse
-    buf = []
+    buf = ""
     while line = @src.gets
       buf << line
       if line =~ /\A\s*\z/
@@ -89,14 +123,16 @@ p $1
         else
           @entries << e
         end
-        buf = []
+        buf = ""
       end
     end
-    e = Entry.new(buf)
-    if @header.nil? and e.header?
-      @header = e
-    else
-      @entries << e
+    unless buf.empty?
+      e = Entry.new(buf)
+      if @header.nil? and e.header?
+        @header = e
+      else
+        @entries << e
+      end
     end
   end
   private :parse

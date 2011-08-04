@@ -15,7 +15,7 @@ describe GettextPo, "は" do
       before do
         @po_file = StringIO.new(<<EOS)
 msgid ""
-msgstr ""adduser-3.112_ja.po
+msgstr ""
 "Project-Id-Version: sample_app 0.0.1\\n"
 "Report-Msgid-Bugs-To: \\n"
 "POT-Creation-Date: 2011-01-01 12:34+0900\\n"
@@ -42,19 +42,19 @@ EOS
         @po_file = StringIO.new(<<EOS)
 msgid ""
 msgstr ""
-"Project-Id-Version: sample_app 0.0.1\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-01 12:34+0900\n"
-"PO-Revision-Date: 2011-01-11 13:57+0900\n"
-"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\n"
-"Language-Team: Example Team <team@example.com>\n"
-"Language: ja_JP\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8 bit\n"
+"Project-Id-Version: sample_app 0.0.1\\n"
+"Report-Msgid-Bugs-To: \\n"
+"POT-Creation-Date: 2011-01-01 12:34+0900\\n"
+"PO-Revision-Date: 2011-01-11 13:57+0900\\n"
+"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\\n"
+"Language-Team: Example Team <team@example.com>\\n"
+"Language: ja_JP\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8 bit\\n"
 
-msgid "Hello, World.\n"
-msgstr "こんにちわ、世界\n"
+msgid "Hello, World.\\n"
+msgstr "こんにちわ、世界\\n"
 EOS
       end
       it "size == 1 である" do
@@ -65,8 +65,8 @@ EOS
         po = GettextPo.new(@po_file)
         po.entry.should have(1).item
         po.entry[0].should be_instance_of GettextPo::Entry
-        po.entry[0].msgid.should == "Hello, World.\n"
-        po.entry[0].msgstr.should == "こんにちわ、世界\n"
+        po.entry[0].msgid.should == ["Hello, World.\n"]
+        po.entry[0].msgstr.should == ["こんにちわ、世界\n"]
       end
     end
     context "2エントリのpoファイルを渡すと" do
@@ -74,25 +74,25 @@ EOS
         @po_file = StringIO.new(<<EOS)
 msgid ""
 msgstr ""
-"Project-Id-Version: sample_app 0.0.1\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-01 12:34+0900\n"
-"PO-Revision-Date: 2011-01-11 13:57+0900\n"
-"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\n"
-"Language-Team: Example Team <team@example.com>\n"
-"Language: ja_JP\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8 bit\n"
+"Project-Id-Version: sample_app 0.0.1\\n"
+"Report-Msgid-Bugs-To: \\n"
+"POT-Creation-Date: 2011-01-01 12:34+0900\\n"
+"PO-Revision-Date: 2011-01-11 13:57+0900\\n"
+"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\\n"
+"Language-Team: Example Team <team@example.com>\\n"
+"Language: ja_JP\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8 bit\\n"
 
-msgid "Hello, World.\n"
-msgstr "こんにちわ、世界\n"
+msgid "Hello, World.\\n"
+msgstr "こんにちわ、世界\\n"
 
 msgid ""
-"Good-bye, World.\n"
+"Good-bye, World.\\n"
 "See you again."
 msgstr ""
-"さよなら、世界\n"
+"さよなら、世界\\n"
 "また会う日まで"
 EOS
       end
@@ -104,11 +104,11 @@ EOS
         po = GettextPo.new(@po_file)
         po.entry.should have(2).items
         po.entry[0].should be_instance_of GettextPo::Entry
-        po.entry[0].msgid.should == "Hello, World.\n"
-        po.entry[0].msgstr.should == "こんにちわ、世界\n"
+        po.entry[0].msgid.should == ["Hello, World.\n"]
+        po.entry[0].msgstr.should == ["こんにちわ、世界\n"]
         po.entry[1].should be_instance_of GettextPo::Entry
-        po.entry[1].msgid.should == "Good-bye, World.\n"
-        po.entry[1].msgstr.should == "さよなら、世界\nまた会う日まで"
+        po.entry[1].msgid.should == ["Good-bye, World.\nSee you again."]
+        po.entry[1].msgstr.should == ["さよなら、世界\nまた会う日まで"]
       end
     end
   end
@@ -118,16 +118,16 @@ EOS
       @po_file = StringIO.new(<<EOS)
 msgid ""
 msgstr ""
-"Project-Id-Version: sample_app 0.0.1\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-01 12:34+0900\n"
-"PO-Revision-Date: 2011-01-11 13:57+0900\n"
-"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\n"
-"Language-Team: Example Team <team@example.com>\n"
-"Language: ja_JP\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8 bit\n"
+"Project-Id-Version: sample_app 0.0.1\\n"
+"Report-Msgid-Bugs-To: \\n"
+"POT-Creation-Date: 2011-01-01 12:34+0900\\n"
+"PO-Revision-Date: 2011-01-11 13:57+0900\\n"
+"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\\n"
+"Language-Team: Example Team <team@example.com>\\n"
+"Language: ja_JP\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8 bit\\n"
 EOS
       po = GettextPo.new(@po_file)
       po.header.should be_instance_of GettextPo::Entry
