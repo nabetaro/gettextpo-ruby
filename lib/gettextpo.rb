@@ -7,14 +7,15 @@
 
 require 'strscan'
 
-
+#= Class library for handling gettext po file.
 class GettextPo
   class InvalidEntry < StandardError; end
 
+  #== One entry
   class Entry
     def initialize(lines)
       s = StringScanner.new lines
-      @source = lines
+      @raw = lines
       @translator_comment = ""      # translator-comments
       @extracted_comment = ""       # extracted-comments
       @reference = ""               # reference
@@ -24,13 +25,13 @@ class GettextPo
       @msgstr = [""]                # translated-string
       @header_flag = false
       while !s.eos?
-        if s.scan(/^#\. ?(.*\n)/)
+        if s.scan(/^#\. ?(.*)\n/)
           # extracted-comments
           @extracted_comment << s[1]
-        elsif s.scan(/^#\: ?(.*\n)/)
+        elsif s.scan(/^#\: ?(.*)\n/)
           # reference
           @reference << s[1]
-        elsif s.scan(/^#\, ?(.*\n)/)
+        elsif s.scan(/^#\, ?(.*)\n/)
           # flag
           @flag << s[1]
         elsif s.scan(/^#\| msgid \"(.*)\"\n/)
@@ -62,7 +63,7 @@ class GettextPo
           while !s.scan(/^\"(.*)\"\n/).nil?
             @msgstr[i] << unescape(s[1])
           end
-        elsif s.scan(/^# ?(.*\n)/)
+        elsif s.scan(/^# ?(.*)\n/)
           # translator-comments
           @translator_comment << s[1]
         elsif s.scan(/\s*\n/)
@@ -106,8 +107,8 @@ class GettextPo
       @flag
     end
 
-    def source
-      @source
+    def raw
+      @raw
     end
 
     def unescape(str)
@@ -117,26 +118,22 @@ class GettextPo
   end
 
   class Header < Entry
-    def initialize(entry)
-      @source = entry.source
-      @translator_comment = entry.translator_comment
-      @extracted_comment = entry.extracted_comment
-      @reference = entry.reference
-      @flag = entry.flag
-      @prev_msgid = entry.prev_msgid
-      @msgid = entry.msgid
-      @msgstr = entry.msgstr
+    def initialize(lines)
+      super lines
       @header_flag = true
     end
   end
 
-
+  # _
   def initialize(src, opt={})
     @src = src.is_a?(String) ? StringIO.new(src) : src
+    @rawdata = ""
     @header = nil
     @entries = []
     parse
   end
+
+  attr_reader :rawdata
 
   def size
     @entries.size
@@ -150,27 +147,28 @@ class GettextPo
     @header
   end
 
-
   def parse
     buf = ""
     while line = @src.gets
-      buf << line
+      @rawdata << line
       if line =~ /\A\s*\z/
-        e = Entry.new(buf)
-        if @header.nil? and e.header?
-          @header = Header.new(e)
+        if @header.nil? and @entries.empty?
+          @header = Header.new(buf)
+          @entries << @header
         else
-          @entries << e
+          @entries << Entry.new(buf)
         end
         buf = ""
+      else
+        buf << line
       end
     end
     unless buf.empty?
-      e = Entry.new(buf)
-      if @header.nil? and e.header?
-        @header = Header.new(e)
+      if @header.nil? and @entries.empty?
+        @header = Header.new(buf)
+        @entries << @header
       else
-        @entries << e
+        @entries << Entry.new(buf)
       end
     end
   end

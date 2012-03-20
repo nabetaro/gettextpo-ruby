@@ -29,13 +29,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8 bit\\n"
 EOS
       end
-      it "size == 0 である" do
+      it "size == 1 である" do
         po = GettextPo.new(@no_entry)
-        po.size.should == 0
+        po.size.should == 1
       end
-      it "entry は empty である" do
+      it "entry は header のみである" do
         po = GettextPo.new(@no_entry)
-        po.entry.should be_empty
+        po.entry[0].should be_instance_of GettextPo::Header
+      end
+      it "rawdata は入力した生データそのものである" do
+        po = GettextPo.new(@no_entry)
+        po.rawdata.should == <<EOS
+msgid ""
+msgstr ""
+"Project-Id-Version: sample_app 0.0.1\\n"
+"Report-Msgid-Bugs-To: \\n"
+"POT-Creation-Date: 2011-01-01 12:34+0900\\n"
+"PO-Revision-Date: 2011-01-11 13:57+0900\\n"
+"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\\n"
+"Language-Team: Example Team <team@example.com>\\n"
+"Language: ja_JP\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8 bit\\n"
+EOS
       end
     end
     context "1エントリのpoファイルを渡すと" do
@@ -58,16 +75,37 @@ msgid "Hello, World.\\n"
 msgstr "こんにちわ、世界\\n"
 EOS
       end
-      it "size == 1 である" do
+      it "size == 2 である" do
         po = GettextPo.new(@one_entry)
-        po.size.should == 1
+        po.size.should == 2
       end
       it "entry は GettextPo::Entryのインスタンスを1つ持つ配列である" do
         po = GettextPo.new(@one_entry)
-        po.entry.should have(1).item
-        po.entry[0].should be_instance_of GettextPo::Entry
-        po.entry[0].msgid.should == ["Hello, World.\n"]
-        po.entry[0].msgstr.should == ["こんにちわ、世界\n"]
+        po.entry.should have(2).item
+        po.entry[0].should be_instance_of GettextPo::Header
+        po.entry[1].should be_instance_of GettextPo::Entry
+        po.entry[1].msgid.should == ["Hello, World.\n"]
+        po.entry[1].msgstr.should == ["こんにちわ、世界\n"]
+      end
+      it "rawdata は入力した生データそのものである" do
+        po = GettextPo.new(@one_entry)
+        po.rawdata.should == <<EOS
+msgid ""
+msgstr ""
+"Project-Id-Version: sample_app 0.0.1\\n"
+"Report-Msgid-Bugs-To: \\n"
+"POT-Creation-Date: 2011-01-01 12:34+0900\\n"
+"PO-Revision-Date: 2011-01-11 13:57+0900\\n"
+"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\\n"
+"Language-Team: Example Team <team@example.com>\\n"
+"Language: ja_JP\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8 bit\\n"
+
+msgid "Hello, World.\\n"
+msgstr "こんにちわ、世界\\n"
+EOS
       end
     end
     context "2エントリのpoファイルを渡すと" do
@@ -97,19 +135,47 @@ msgstr ""
 "また会う日まで"
 EOS
       end
-      it "size = 2 である" do
+      it "size = 3 である" do
         po = GettextPo.new(@two_entry)
-        po.size.should == 2
+        po.size.should == 3
       end
       it "entry は GettextPo::Entryのインスタンスを2つ持つ配列である" do
         po = GettextPo.new(@two_entry)
-        po.entry.should have(2).items
-        po.entry[0].should be_instance_of GettextPo::Entry
-        po.entry[0].msgid.should == ["Hello, World.\n"]
-        po.entry[0].msgstr.should == ["こんにちわ、世界\n"]
+        po.entry.should have(3).items
+        po.entry[0].should be_instance_of GettextPo::Header
         po.entry[1].should be_instance_of GettextPo::Entry
-        po.entry[1].msgid.should == ["Good-bye, World.\nSee you again."]
-        po.entry[1].msgstr.should == ["さよなら、世界\nまた会う日まで"]
+        po.entry[1].msgid.should == ["Hello, World.\n"]
+        po.entry[1].msgstr.should == ["こんにちわ、世界\n"]
+        po.entry[2].should be_instance_of GettextPo::Entry
+        po.entry[2].msgid.should == ["Good-bye, World.\nSee you again."]
+        po.entry[2].msgstr.should == ["さよなら、世界\nまた会う日まで"]
+      end
+      it "rawdata は入力した生データそのものである" do
+        po = GettextPo.new(@two_entry)
+        po.rawdata.should == <<EOS
+msgid ""
+msgstr ""
+"Project-Id-Version: sample_app 0.0.1\\n"
+"Report-Msgid-Bugs-To: \\n"
+"POT-Creation-Date: 2011-01-01 12:34+0900\\n"
+"PO-Revision-Date: 2011-01-11 13:57+0900\\n"
+"Last-Translator: KURASAWA Nozomu <nabetaro@example.com>\\n"
+"Language-Team: Example Team <team@example.com>\\n"
+"Language: ja_JP\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8 bit\\n"
+
+msgid "Hello, World.\\n"
+msgstr "こんにちわ、世界\\n"
+
+msgid ""
+"Good-bye, World.\\n"
+"See you again."
+msgstr ""
+"さよなら、世界\\n"
+"また会う日まで"
+EOS
       end
     end
   end
@@ -199,31 +265,42 @@ EOS
   end
   context "シンプルなメッセージの場合、" do
     it "msgid は msgid 以下の文字列を持つ1要素の配列である" do
-      @po.entry[0].msgid.should == ["Hello, World.\n"]
+      @po.entry[1].msgid.should == ["Hello, World.\n"]
     end
     it "prev_msgid は #| msgid 以下の文字列を持つ1要素の配列である" do
-      @po.entry[0].prev_msgid.should == ["Hello, world!!"]
+      @po.entry[1].prev_msgid.should == ["Hello, world!!"]
     end
     it "msgstr は msgstr 以下の文字列を持つ1要素の配列である" do
-      @po.entry[0].msgstr.should == ["こんにちわ、世界\n"]
+      @po.entry[1].msgstr.should == ["こんにちわ、世界\n"]
     end
     it "translator_comment は # 以下の文字列である" do
-      @po.entry[0].translator_comment.should == "simple message"
+      @po.entry[1].translator_comment.should == "simple message"
     end
     it "extracted_comment は #. 以下の文字列である" do
-      @po.entry[0].extracted_comment.should == "sample of simple message"
+      @po.entry[1].extracted_comment.should == "sample of simple message"
     end
     it "reference は #: 以下の文字列である" do
-      @po.entry[0].reference.should == "lib/sample.c:133"
+      @po.entry[1].reference.should == "lib/sample.c:133"
     end
     it "flag は #, 以下の文字列である" do
-      @po.entry[0].flag.should == "c-format"
+      @po.entry[1].flag.should == "c-format"
+    end
+    it "raw は エントリ全体の生文字列である" do
+      @po.entry[1].raw.should == <<EOS
+# simple message
+#. sample of simple message
+#: lib/sample.c:133
+#, c-format
+#| msgid "Hello, world!!"
+msgid "Hello, World.\\n"
+msgstr "こんにちわ、世界\\n"
+EOS
     end
   end
 
   context "複数行のメッセージの場合、" do
     it "msgid は msgid 以下の文字列を持つ1要素の配列である" do
-      @po.entry[1].msgid.should == ["Good-bye, World.\nSee you again."]
+      @po.entry[2].msgid.should == ["Good-bye, World.\nSee you again."]
     end
     it "prev_msgid は #| msgid 以下の文字列を持つ1要素の配列である"
     it "msgstr は msgstr 以下の文字列を持つ1要素の配列である"
