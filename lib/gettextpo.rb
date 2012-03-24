@@ -20,10 +20,10 @@ class GettextPo
     def initialize(lines)
       s = StringScanner.new lines
       @raw = lines
-      @translator_comment = ""      # translator-comments
-      @extracted_comment = ""       # extracted-comments
+      @translator_comment = []      # translator-comments
+      @extracted_comment = []       # extracted-comments
       @reference = ""               # reference
-      @flag = ""                    # flag
+      @flag = []                    # flag
       @prev_msgid = [""]            # previous-untranslated-string
       @msgid = [""]                 # untranslated-string
       @msgstr = [""]                # translated-string
@@ -37,7 +37,7 @@ class GettextPo
           @reference << s[1]
         elsif s.scan(/^#\, ?(.*)\n/)
           # flag
-          @flag << s[1]
+          @flag += s[1].split(",").collect{|f| f.strip}
         elsif s.scan(/^#\| msgid \"(.*)\"\n/)
           # previous-untranslated-string
           @prev_msgid[0] = ""  unless @prev_msgid[0]
@@ -76,7 +76,10 @@ class GettextPo
           raise InvalidEntry, "REST: #{s.rest}"
         end
         @header_flag = true if @msgid[0].empty?
+
       end
+      @extracted_comment = @extracted_comment.join "\n"
+      @translator_comment = @translator_comment.join "\n"
     end
 
     #=== ヘッダかどうか表す

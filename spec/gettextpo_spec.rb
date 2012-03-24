@@ -231,10 +231,15 @@ msgstr ""
 msgid "Hello, World.\\n"
 msgstr "こんにちわ、世界\\n"
 
-# multiline message
+# multiline message.
+# second line.
 #. sample of multiline message
+#. second line.
 #: lib/sample.c:255
+#: lib/sample2.c:155
 #, c-format
+#| msgid "Good-bye, World.\\n"
+#| "See you later."
 msgid ""
 "Good-bye, World.\\n"
 "See you again."
@@ -282,8 +287,8 @@ EOS
     it "reference は #: 以下の文字列である" do
       @po.entry[1].reference.should == "lib/sample.c:133"
     end
-    it "flag は #, 以下の文字列である" do
-      @po.entry[1].flag.should == "c-format"
+    it "flag は #, 以下の文字列を','で区切った配列である" do
+      @po.entry[1].flag.should == ["c-format"]
     end
     it "raw は エントリ全体の生文字列である" do
       @po.entry[1].raw.should == <<EOS
@@ -302,12 +307,18 @@ EOS
     it "msgid は msgid 以下の文字列を持つ1要素の配列である" do
       @po.entry[2].msgid.should == ["Good-bye, World.\nSee you again."]
     end
-    it "prev_msgid は #| msgid 以下の文字列を持つ1要素の配列である"
-    it "msgstr は msgstr 以下の文字列を持つ1要素の配列である"
-    it "translator_comment は # 以下の文字列である"
-    it "extracted_comment は #. 以下の文字列である"
-    it "reference は #: 以下の文字列である"
-    it "flag は #, 以下の文字列である"
+    it "prev_msgid は #| msgid 以下の文字列を持つ1要素の配列である" do
+      @po.entry[2].prev_msgid.should == ["Good-bye, World.\nSee you later."]
+    end
+    it "msgstr は msgstr 以下の文字列を持つ1要素の配列である" do
+      @po.entry[2].msgstr.should == ["さよなら、世界\nまた会う日まで"]
+    end
+    it "translator_comment は # 以下の文字列である" do
+      @po.entry[2].translator_comment.should == "multiline message.\nsecond line."
+    end
+    it "extracted_comment は #. 以下の文字列である" do
+      @po.entry[2].extracted_comment.should == "sample of multiline message\nsecond line."
+    end
   end
 end
 
