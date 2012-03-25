@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "gettextpo-ruby"
   gem.homepage = "http://github.com/nabetaro/gettextpo-ruby"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Library for handling GetText po }
+  gem.description = %Q{Library for handling GetText po}
   gem.email = "nabetaro@caldron.jp"
   gem.authors = ["nabetaro"]
   # dependencies defined in Gemfile
