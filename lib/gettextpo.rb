@@ -6,6 +6,7 @@
 #  http://www.gnu.org/software/gettext/manual/gettext.html#PO-Files
 
 require 'strscan'
+require 'date'
 
 #= Class library for handling gettext po file.
 class GettextPo
@@ -18,7 +19,6 @@ class GettextPo
     # 1エントリを表す文字列を元に、各要素を解析して格納する
     #_lines_:: 1エントリを表す複数行の文字列
     def initialize(lines)
-      s = StringScanner.new lines
       @raw = lines
       @translator_comment = []      # translator-comments
       @extracted_comment = []       # extracted-comments
@@ -28,6 +28,7 @@ class GettextPo
       @msgid = [""]                 # untranslated-string
       @msgstr = [""]                # translated-string
       @header_flag = false
+      s = StringScanner.new @raw
       while !s.eos?
         if s.scan(/^#\. ?(.*)\n/)
           # extracted-comments
@@ -75,8 +76,7 @@ class GettextPo
         else
           raise InvalidEntry, "REST: #{s.rest}"
         end
-        @header_flag = true if @msgid[0].empty?
-
+        @header_flag = false
       end
       @extracted_comment = @extracted_comment.join "\n"
       @translator_comment = @translator_comment.join "\n"
@@ -143,7 +143,36 @@ class GettextPo
     def initialize(lines)
       super lines
       @header_flag = true
+      s = StringScanner.new @msgstr[0]
+      while !s.eos?
+        if s.scan(/^Project-Id-Version: ?(.*)\n/)
+          @project_id_version = s[1]
+        elsif s.scan(/^Report-Msgid-Bugs-To: ?(.*)\n/)
+          @report_msgid_bugs_to = s[1]
+        elsif s.scan(/^POT-Creation-Date: ?(.*)\n/)
+          @pot_creation_date = DateTime.parse(s[1])
+        elsif s.scan(/^PO-Revision-Date: ?(.*)\n/)
+          @po_revision_date = DateTime.parse(s[1])
+        elsif s.scan(/^Last-Translator: ?(.*)\n/)
+          @last_translator = s[1]
+        elsif s.scan(/^Language-Team: ?(.*)\n/)
+          @language_team = s[1]
+        elsif s.scan(/^Language: ?(.*)\n/)
+          @language = s[1]
+        elsif s.scan(/^Content-Type: ?(.*)\n/)
+          @content_type = s[1]
+        elsif s.scan(/^Content-Transfer-Encoding: ?(.*)\n/)
+          @content_transfer_encoding = s[1]
+        elsif s.scan(/^Plural-Forms: ?(.*)\n/)
+          @plural_forms = s[1]
+        elsif s.scan(/^MIME-Version: ?(.*)\n/)
+          nil
+        else
+          raise InvalidEntry, "REST: #{s.rest}"
+        end
+      end
     end
+    attr_reader :project_id_version, :report_msgid_bugs_to, :pot_creation_date, :po_revision_date, :last_translator, :language_team, :language, :content_type, :content_transfer_encoding, :plural_forms
   end
 
   #=== 初期化する
